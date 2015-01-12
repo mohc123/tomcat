@@ -12,7 +12,7 @@ action :configure do
     if not new_resource.instance_variable_get("@#{attr}")
       new_resource.instance_variable_set("@#{attr}", node['tomcat'][attr])
     end
-  end 
+  end
 
   if new_resource.name == 'base'
     instance = base_instance
@@ -33,7 +33,7 @@ action :configure do
     [:base, :home, :config_dir, :log_dir, :work_dir, :context_dir,
      :webapp_dir].each do |attr|
       if not new_resource.instance_variable_get("@#{attr}") and node["tomcat"][attr]
-        new = node["tomcat"][attr].sub("tomcat#{node['tomcat']['base_version']}", "#{instance}")
+        new = node["tomcat"][attr].sub(/tomcat#{node['tomcat']['suffix']}/, "#{instance}")
         new_resource.instance_variable_set("@#{attr}", new)
       end
     end
@@ -41,6 +41,8 @@ action :configure do
     # Create the directories, since the OS package wouldn't have
     [:base, :config_dir, :context_dir].each do |attr|
       directory new_resource.instance_variable_get("@#{attr}") do
+        owner new_resource.user
+        group new_resource.group
         mode '0755'
         recursive true
       end
@@ -58,6 +60,7 @@ action :configure do
     if new_resource.home != new_resource.base
       link "#{new_resource.home}" do
         to "#{new_resource.base}"
+        not_if { ::File.directory?(new_resource.home) }
       end
     end
 
@@ -79,7 +82,12 @@ action :configure do
      'work' => 'work_dir', 'webapps' => 'webapp_dir'}.each do |name, attr|
       link "#{new_resource.base}/#{name}" do
         to new_resource.instance_variable_get("@#{attr}")
+        not_if { ::File.directory?(new_resource.instance_variable_get("@#{attr}")) }
       end
+    end
+
+    link "#{node['tomcat']['config_dir']}/#{instance}.conf" do
+      to "#{node['tomcat']['config_dir']}/#{base_instance}.conf"
     end
 
     # Make a copy of the init script for this instance
@@ -92,11 +100,18 @@ action :configure do
         mode '0644'
       end
     else
-      execute "/etc/init.d/#{instance}" do
-        command <<-EOH
-          cp /etc/init.d/#{base_instance} /etc/init.d/#{instance}
-          perl -i -pe 's/#{base_instance}/#{instance}/g' /etc/init.d/#{instance}
-        EOH
+      link "/etc/init.d/#{instance}" do
+        to "/etc/init.d/#{base_instance}"
+      end
+      # tomcat 7 only
+      ruby_block 'fix startup script:: https://bugzilla.redhat.com/show_bug.cgi?id=1104704' do
+        block do
+          fe = Chef::Util::FileEdit.new("/usr/sbin/tomcat")
+          fe.search_file_replace_line(/TOMCAT_CFG=\"\/etc\/tomcat\/tomcat.conf\"/,":")
+          fe.search_file_replace_line(/\.\s+\$TOMCAT_CFG/,":")
+          fe.write_file
+        end
+        only_if { instance == 'tomcat' }
       end
     end
   end
@@ -188,6 +203,14 @@ action :configure do
 
   template "#{new_resource.config_dir}/logging.properties" do
     source 'logging.properties.erb'
+    owner 'root'
+    group 'root'
+    mode '0644'
+    notifies :restart, "service[#{instance}]"
+  end
+
+  template "#{new_resource.config_dir}/log4j.properties" do
+    source 'log4j.properties.erb'
     owner 'root'
     group 'root'
     mode '0644'

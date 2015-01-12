@@ -10,8 +10,8 @@ Environment="SERVICE_NAME=<%= @instance %>"
 ExecStart=/usr/sbin/tomcat-sysd start
 ExecStop=/usr/sbin/tomcat-sysd stop
 SuccessExitStatus=143
-User=tomcat
-Group=tomcat
+User=<%=node['tomcat']['group']%>
+Group=<%=node['tomcat']['group'] %>
 
 [Install]
 WantedBy=multi-user.target

@@ -51,11 +51,12 @@ default['tomcat']['run_base_instance'] = true
 default['tomcat']['packages'] = ["tomcat#{node['tomcat']['base_version']}"]
 default['tomcat']['deploy_manager_packages'] = ["tomcat#{node['tomcat']['base_version']}-admin"]
 
+suffix = node['tomcat']['base_version'].to_i < 7 ? node['tomcat']['base_version'] : ""
+default['tomcat']['suffix'] = suffix
+
 case node['platform_family']
 
 when 'rhel', 'fedora'
-  suffix = node['tomcat']['base_version'].to_i < 7 ? node['tomcat']['base_version'] : ""
-
   default['tomcat']['base_instance'] = "tomcat#{suffix}"
   default['tomcat']['user'] = 'tomcat'
   default['tomcat']['group'] = 'tomcat'

@@ -2,10 +2,11 @@ driver:
   name: vagrant
 
 driver_config:
-  require_chef_omnibus: true
+  require_chef_omnibus: 11.14.6
 
 provisioner:
   name: chef_zero
+  data_path: test/shared
 
 platforms:
 - name: ubuntu-14.04
@@ -26,11 +27,32 @@ platforms:
 
 suites:
 - name: tomcat6
-  run_list: ["recipe[tomcat]"]
+  run_list: ["recipe[java]", "recipe[tomcat]"]
   excludes: ["centos-7.0"]
   attributes: {}
 
 - name: tomcat7
-  run_list: ["recipe[tomcat]"]
+  driver:
+    network:
+    - ["forwarded_port", {guest: 8081, host: 8082}]
+  run_list: ["recipe[java]", "recipe[tomcat_test]"]
   excludes: ["ubuntu-10.04"]
-  attributes: {tomcat: {base_version: 7}}
+  attributes: {"tomcat":{"base_version":7,"run_base_instance":false,"instances":{"dam":{ "base" : "/ca/web/dam", "home" : "/ca/web/dam","webapp_dir":"/ca/web/dam/webapps", "log_dir" : "/ca/web/dam/logs", "work_dir" : "/ca/web/dam/work", "config_dir" : "/ca/web/dam/conf","port":8081,"shutdown_port":8006}}},"java":{"install_flavor":"oracle","jdk_version":7,"oracle":{"accept_oracle_download_terms":true}}}
+
+- name: tomcat6-clustered
+  driver:
+    network:
+    - ["forwarded_port", {guest: 8081, host: 8084}]
+    - ["forwarded_port", {guest: 8083, host: 8086}]
+  run_list: ["recipe[java]", "recipe[tomcat_test]"]
+  excludes: ["ubuntu-10.04"]
+  attributes: {"tomcat":{"base_version":6,"run_base_instance":false,"instances":{"dam":{ "base" : "/ca/web/dam", "home" : "/ca/web/dam","webapp_dir":"/ca/web/dam/webapps", "log_dir" : "/ca/web/dam/logs", "work_dir" : "/ca/web/dam/work", "config_dir" : "/ca/web/dam/conf","port":8081,"shutdown_port":8006}, "pentaho":{ "base" : "/ca/web/pentaho", "webapp_dir":"/ca/web/pentaho/webapps", "log_dir" : "/ca/web/pentaho/logs", "work_dir" : "/ca/web/pentaho/work", "config_dir" : "/ca/web/pentaho/conf","port":8083,"shutdown_port":8007}}},"java":{"install_flavor":"oracle","jdk_version":7,"oracle":{"accept_oracle_download_terms":true}}}
+
+- name: tomcat7-clustered
+  driver:
+    network:
+    - ["forwarded_port", {guest: 8081, host: 8084}]
+    - ["forwarded_port", {guest: 8083, host: 8086}]
+  run_list: ["recipe[java]", "recipe[tomcat_test]"]
+  excludes: ["ubuntu-10.04"]
+  attributes: {"tomcat":{"base_version":7,"run_base_instance":false,"instances":{"dam":{ "base" : "/ca/web/dam", "home" : "/ca/web/dam","webapp_dir":"/ca/web/dam/webapps", "log_dir" : "/ca/web/dam/logs", "work_dir" : "/ca/web/dam/work", "config_dir" : "/ca/web/dam/conf","port":8081,"shutdown_port":8006}, "pentaho":{ "base" : "/ca/web/pentaho", "webapp_dir":"/ca/web/pentaho/webapps", "log_dir" : "/ca/web/pentaho/logs", "work_dir" : "/ca/web/pentaho/work", "config_dir" : "/ca/web/pentaho/conf","port":8083,"shutdown_port":8007}}},"java":{"install_flavor":"oracle","jdk_version":7,"oracle":{"accept_oracle_download_terms":true}}}
