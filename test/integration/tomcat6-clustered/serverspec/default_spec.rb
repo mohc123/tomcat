@@ -14,12 +14,12 @@ describe file('/usr/sbin/tomcat') do
   it { should contain(/^:$/).from(/^if \[ -z \"\${TOMCAT_CFG}\" \]; then/).to(/end/) }
 end
 
-describe service('tomcat-dam') do
+describe service('tomcat6-dam') do
  it { should be_enabled }
  it { should be_running }
 end
 
-describe service('tomcat-pentaho') do
+describe service('tomcat6-pentaho') do
   it { should be_enabled }
   it { should be_running }
 end

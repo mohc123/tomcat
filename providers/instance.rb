@@ -1,3 +1,5 @@
+use_inline_resources
+
 action :configure do
   base_instance = node['tomcat']['base_instance']
 
@@ -111,7 +113,7 @@ action :configure do
           fe.search_file_replace_line(/\.\s+\$TOMCAT_CFG/,":")
           fe.write_file
         end
-        only_if { instance == 'tomcat' }
+        only_if { node['tomcat']['suffix'] == '' }
       end
     end
   end
@@ -135,6 +137,7 @@ action :configure do
       source 'sysconfig_tomcat6.erb'
       variables ({
         :user => new_resource.user,
+        :service_name => instance,
         :home => new_resource.home,
         :base => new_resource.base,
         :java_options => new_resource.java_options,

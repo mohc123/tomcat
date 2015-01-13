@@ -11,7 +11,8 @@ include_recipe 'tomcat'
   end
 
   service "tomcat#{node['tomcat']['suffix']}-#{webapp}" do
-    action :nothing
+    action :start
+    supports ({ :restart => true, :reload => true, :status => true })
   end
 
 end
