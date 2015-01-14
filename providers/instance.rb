@@ -1,5 +1,3 @@
-use_inline_resources
-
 action :configure do
   base_instance = node['tomcat']['base_instance']
 
@@ -71,6 +69,8 @@ action :configure do
      'tomcat-users.xml', 'web.xml'].each do |file|
       link "#{new_resource.config_dir}/#{file}" do
         to "#{node['tomcat']['config_dir']}/#{file}"
+        owner new_resource.user
+        mode 0777
       end
     end
 
