@@ -22,19 +22,22 @@
 
 
 if node['tomcat']['base_version'].to_i == 7
+  suffix = ""
   if platform_family?('rhel') and node[:platform_version].to_i < 7
     include_recipe 'yum-epel'
   end
+else
+  suffix = node['tomcat']['base_version']
 end
 
 node['tomcat']['packages'].each do |pkg|
-  package pkg do
+  package pkg.gsub(/tomcat/, "tomcat#{suffix}") do
     action :install
   end
 end
 
 node['tomcat']['deploy_manager_packages'].each do |pkg|
-  package pkg do
+  package pkg.gsub(/tomcat/, "tomcat#{suffix}") do
     action :install
   end
 end
