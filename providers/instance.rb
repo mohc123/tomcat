@@ -67,10 +67,13 @@ action :configure do
     # config_dir needs symlinks to the files we're not going to create
     ['catalina.policy', 'catalina.properties', 'context.xml',
      'tomcat-users.xml', 'web.xml'].each do |file|
+      file "#{node['tomcat']['config_dir']}/#{file}" do
+        mode '0704'
+      end
       link "#{new_resource.config_dir}/#{file}" do
         to "#{node['tomcat']['config_dir']}/#{file}"
         owner new_resource.user
-        mode 0777
+        mode '0704'
       end
     end
 
